@@ -196,6 +196,10 @@
           "exit_reason": {
             "anyOf": [{ "type": "string" }, { "type": "null" }],
             "title": "Exit Reason"
+          },
+          "exit_reason_label": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Exit Reason Label"
           }
         },
         "type": "object",
@@ -613,6 +617,10 @@
           "return_pct": { "type": "number", "title": "Return Pct" },
           "candles_held": { "type": "integer", "title": "Candles Held" },
           "exit_reason": { "type": "string", "title": "Exit Reason" },
+          "exit_reason_label": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Exit Reason Label"
+          },
           "equity_before": { "type": "number", "title": "Equity Before" },
           "equity_after": { "type": "number", "title": "Equity After" }
         },

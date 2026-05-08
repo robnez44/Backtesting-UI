@@ -43,7 +43,7 @@ export function TradesTable({ trades }: TradesTableProps) {
                   {formatPct(trade.return_pct)}
                 </td>
                 <td>{trade.candles_held}</td>
-                <td>{trade.exit_reason}</td>
+                <td>{trade.exit_reason_label}</td>
               </tr>
             ))}
           </tbody>
