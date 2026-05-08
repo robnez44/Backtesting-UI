@@ -29,7 +29,7 @@ export function AlertsChat({ alerts }: AlertsChatProps) {
               <footer>
                 <span>Price: {alert.price}</span>
                 {alert.trade_number ? <span>Trade #{alert.trade_number}</span> : null}
-                {alert.exit_reason ? <span>{alert.exit_reason}</span> : null}
+                {alert.exit_reason_label ? <span>{alert.exit_reason_label}</span> : null}
               </footer>
             </article>
           )

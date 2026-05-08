@@ -9,6 +9,7 @@ export interface TradeResponse {
   return_pct: number,
   candles_held: number,
   exit_reason: string,
+  exit_reason_label?: string | null,
   equity_before: number,
   equity_after: number,
 }
@@ -58,6 +59,7 @@ export interface BacktestAlertResponse {
   price: number,
   trade_number?: number | null,
   exit_reason?: string | null,
+  exit_reason_label?: string | null,
 }
 
 export interface BacktestResponse {
