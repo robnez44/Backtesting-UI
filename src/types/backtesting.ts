@@ -68,6 +68,7 @@ export interface BacktestResponse {
   start_time: string | null,
   end_time: string | null,
   created_at: string | null,
+  loaded_candles_count?: number,
   initial_capital: number,
   final_capital: number,
   total_return_pct: number,
