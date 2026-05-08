@@ -1,8 +1,9 @@
 import axios, { type AxiosInstance, type CreateAxiosDefaults } from 'axios';
 import type { BacktestRequest, BacktestResponse } from '../types/backtesting';
+import { API_BASE } from '../config/api'
 
 const config: CreateAxiosDefaults = {
-  baseURL: import.meta.env.VITE_API_URL || '',
+  baseURL: API_BASE,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
