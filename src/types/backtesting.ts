@@ -1,0 +1,117 @@
+export interface TradeResponse {
+  entry_time: string,
+  exit_time: string,
+  side: string,
+  entry_price: number,
+  exit_price: number,
+  quantity: number,
+  pnl: number,
+  return_pct: number,
+  candles_held: number,
+  exit_reason: string,
+  exit_reason_label?: string | null,
+  equity_before: number,
+  equity_after: number,
+}
+
+export interface BacktestConfigResponse {
+  initial_capital: number,
+  leverage: number,
+  stop_loss_pct: number | null,
+  take_profit_pct: number | null,
+  breakeven_trigger_pct: number | null,
+  min_slope_pct: number,
+  exit_slope_periods: number,
+  ema_gap_min_pct: number,
+  adx_min: number,
+  adx_require_di: boolean,
+  adx_require_rising: boolean,
+  atr_period: number,
+  atr_stop_mult: number | null,
+  atr_trailing_mult: number | null,
+  atr_stop_confirm_on_close: boolean,
+}
+
+export interface BacktestSignalTimelineRowResponse {
+  index: number,
+  timestamp: string,
+  close_price: number,
+  ema10: number,
+  ema55: number,
+  gap_pct: number,
+  slope_pct: number,
+  cond_ema10_gt_ema55: boolean,
+  cond_gap_ge_min: boolean,
+  cond_slope_ge_min: boolean,
+  cond_price_gt_ema10: boolean,
+  adx?: number | null,
+  plus_di?: number | null,
+  minus_di?: number | null,
+  event?: string | null,
+}
+
+export interface BacktestAlertResponse {
+  index: number,
+  timestamp: string,
+  event_type: string,
+  action: string,
+  message: string,
+  price: number,
+  trade_number?: number | null,
+  exit_reason?: string | null,
+  exit_reason_label?: string | null,
+}
+
+export interface BacktestResponse {
+  id: string,
+  symbol: string,
+  interval: string,
+  strategy_name: string,
+  start_time: string | null,
+  end_time: string | null,
+  created_at: string | null,
+  loaded_candles_count?: number,
+  initial_capital: number,
+  final_capital: number,
+  total_return_pct: number,
+  max_drawdown_pct: number,
+  total_trades: number,
+  winning_trades: number,
+  losing_trades: number,
+  win_rate_pct: number,
+  profit_factor: number,
+  avg_trade_return_pct: number,
+  trades: TradeResponse[],
+  config: BacktestConfigResponse | null,
+  alerts_feed?: BacktestAlertResponse[],
+  signals_timeline?: BacktestSignalTimelineRowResponse[],
+}
+
+export interface BacktestRequest {
+  symbol?: string,
+  interval?: string,
+  start_time: string,
+  end_time?: string | null,
+  initial_capital?: number,
+  leverage?: number,
+  stop_loss_pct?: number | null,
+  take_profit_pct?: number | null,
+  breakeven_trigger_pct?: number | null,
+  min_slope_pct?: number,
+  exit_slope_periods?: number,
+  ema_gap_min_pct?: number,
+  adx_min?: number,
+  adx_require_di?: boolean,
+  adx_require_rising?: boolean,
+  atr_period?: number,
+  atr_stop_mult?: number | null,
+  atr_trailing_mult?: number | null,
+}
+
+export interface HTTPValidationError {
+  detail?: Array<{
+    loc: Array<string | number>,
+    msg: string,
+    type: string,
+  }>;
+}
