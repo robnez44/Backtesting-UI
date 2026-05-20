@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { BacktestRequest, BacktestResponse } from '../types/backtesting'
-import { listBacktests as apiList, getBacktest as apiGet, runBacktest as apiRun } from '../api/backtests'
+import type { SeriesDataResponse } from '../types/series'
+import {
+  getBacktest as apiGet,
+  getBacktestSeries as apiGetSeries,
+  listBacktests as apiList,
+  runBacktest as apiRun,
+} from '../api/backtests'
 
 export function useListBacktests(limit = 50) {
   const [items, setItems] = useState<BacktestResponse[]>([])
@@ -64,4 +70,48 @@ export function useRunBacktest() {
   }, [])
 
   return { run, get, loading, error }
+}
+
+export function useBacktestSeries(backtestId: string | null | undefined) {
+  const [data, setData] = useState<SeriesDataResponse | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const resolvedData = backtestId ? data : null
+  const resolvedLoading = backtestId ? loading : false
+  const resolvedError = backtestId ? error : null
+
+  useEffect(() => {
+    if (!backtestId) {
+      return
+    }
+
+    let cancelled = false
+
+    void (async () => {
+      try {
+        setLoading(true)
+        setError(null)
+        const result = await apiGetSeries(backtestId)
+        if (!cancelled) {
+          setData(result)
+        }
+      } catch (err: unknown) {
+        if (!cancelled) {
+          setData(null)
+          setError(err instanceof Error ? err.message : 'Could not load backtest series')
+        }
+      } finally {
+        if (!cancelled) {
+          setLoading(false)
+        }
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [backtestId])
+
+  return { data: resolvedData, loading: resolvedLoading, error: resolvedError }
 }
