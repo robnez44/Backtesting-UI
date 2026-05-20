@@ -14,6 +14,20 @@ export interface TradeResponse {
   equity_after: number,
 }
 
+export interface TradeMarkerResponse {
+  trade_number: number,
+  marker_type: 'entry_exec' | 'exit_exec' | string,
+  side: string,
+  bar_index: number,
+  bar_time: string,
+  execution_time: string,
+  price: number,
+  pnl?: number | null,
+  is_win?: boolean | null,
+  exit_reason?: string | null,
+  exit_reason_label?: string | null,
+}
+
 export interface BacktestConfigResponse {
   initial_capital: number,
   leverage: number,
@@ -82,6 +96,7 @@ export interface BacktestResponse {
   profit_factor: number,
   avg_trade_return_pct: number,
   trades: TradeResponse[],
+  trade_markers?: TradeMarkerResponse[],
   config: BacktestConfigResponse | null,
   alerts_feed?: BacktestAlertResponse[],
   signals_timeline?: BacktestSignalTimelineRowResponse[],

@@ -1,5 +1,6 @@
 import axios, { type AxiosInstance, type CreateAxiosDefaults } from 'axios';
 import type { BacktestRequest, BacktestResponse } from '../types/backtesting';
+import type { SeriesDataResponse } from '../types/series';
 import { API_BASE } from '../config/api'
 
 const config: CreateAxiosDefaults = {
@@ -24,5 +25,8 @@ export const listBacktests = (params?: {
 
 export const getBacktest = (id: string): Promise<BacktestResponse> =>
   api.get<BacktestResponse>(`/api/backtests/${id}`).then(r => r.data)
+
+export const getBacktestSeries = (id: string): Promise<SeriesDataResponse> =>
+  api.get<SeriesDataResponse>(`/api/backtests/${id}/series`).then(r => r.data)
 
 export default api;
