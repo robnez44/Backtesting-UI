@@ -1,9 +1,12 @@
 import { type FormEvent, useMemo, useState } from 'react'
 import { useRunBacktest } from '../hooks/useBacktests'
 import type { BacktestRequest, BacktestResponse } from '../types/backtesting'
+import type { StrategyRecordResponse } from '../types/strategies'
 
 type BacktestFormProps = {
   onCreated: (result: BacktestResponse) => void
+  presetStrategy?: StrategyRecordResponse | null
+  onClearPreset?: () => void
 }
 
 type FormState = {
@@ -42,8 +45,30 @@ const defaultState: FormState = {
   atr_trailing_mult: '2.2',
 }
 
-export function BacktestForm({ onCreated }: BacktestFormProps) {
-  const [form, setForm] = useState<FormState>(defaultState)
+function strategyToFormPatch(strategy: StrategyRecordResponse): Partial<FormState> {
+  const config = strategy.config
+  return {
+    symbol: strategy.symbol ?? 'BTCUSDT',
+    interval: strategy.interval ?? '4h',
+    initial_capital: String(config.initial_capital),
+    leverage: String(config.leverage),
+    min_slope_pct: String(config.min_slope_pct),
+    exit_slope_periods: String(config.exit_slope_periods),
+    ema_gap_min_pct: String(config.ema_gap_min_pct),
+    adx_min: String(config.adx_min),
+    adx_require_di: config.adx_require_di,
+    adx_require_rising: config.adx_require_rising,
+    atr_period: String(config.atr_period),
+    atr_stop_mult: config.atr_stop_mult === null ? '' : String(config.atr_stop_mult),
+    atr_trailing_mult:
+      config.atr_trailing_mult === null ? '' : String(config.atr_trailing_mult),
+  }
+}
+
+export function BacktestForm({ onCreated, presetStrategy, onClearPreset }: BacktestFormProps) {
+  const [form, setForm] = useState<FormState>(() =>
+    presetStrategy ? { ...defaultState, ...strategyToFormPatch(presetStrategy) } : defaultState,
+  )
   const [error, setError] = useState<string | null>(null)
   const { run, loading: isSubmitting } = useRunBacktest()
 
@@ -101,6 +126,17 @@ export function BacktestForm({ onCreated }: BacktestFormProps) {
           {isSubmitting ? 'Running...' : 'Run'}
         </button>
       </div>
+
+      {presetStrategy ? (
+        <div className="preset-banner">
+          <div>
+            <strong>Loaded strategy:</strong> {presetStrategy.name ?? 'Unnamed strategy'}
+          </div>
+          <button type="button" className="btn-ghost" onClick={onClearPreset}>
+            Clear
+          </button>
+        </div>
+      ) : null}
 
       <div className="grid-two">
         <label>
