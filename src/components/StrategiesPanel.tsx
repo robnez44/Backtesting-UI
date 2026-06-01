@@ -159,7 +159,6 @@ export function StrategiesPanel({ onApplyStrategy, reloadToken = 0 }: Strategies
                     <span>Breakeven trigger: {config.breakeven_trigger_pct ?? 'off'}</span>
                     <span>Exit slope periods: {config.exit_slope_periods}</span>
                     <span>Require +DI &gt; -DI: {config.adx_require_di ? 'yes' : 'no'}</span>
-                    <span>ADX rising: {config.adx_require_rising ? 'yes' : 'no'}</span>
                     <span>ATR period: {config.atr_period}</span>
                     <span>ATR stop mult: {config.atr_stop_mult ?? 'off'}</span>
                     <span>ATR trailing mult: {config.atr_trailing_mult ?? 'off'}</span>

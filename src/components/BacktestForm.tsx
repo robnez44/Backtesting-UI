@@ -21,7 +21,6 @@ type FormState = {
   ema_gap_min_pct: string
   adx_min: string
   adx_require_di: boolean
-  adx_require_rising: boolean
   atr_period: string
   atr_stop_mult: string
   atr_trailing_mult: string
@@ -39,7 +38,6 @@ const defaultState: FormState = {
   ema_gap_min_pct: '0',
   adx_min: '0',
   adx_require_di: true,
-  adx_require_rising: false,
   atr_period: '14',
   atr_stop_mult: '1.8',
   atr_trailing_mult: '2.2',
@@ -57,7 +55,6 @@ function strategyToFormPatch(strategy: StrategyRecordResponse): Partial<FormStat
     ema_gap_min_pct: String(config.ema_gap_min_pct),
     adx_min: String(config.adx_min),
     adx_require_di: config.adx_require_di,
-    adx_require_rising: config.adx_require_rising,
     atr_period: String(config.atr_period),
     atr_stop_mult: config.atr_stop_mult === null ? '' : String(config.atr_stop_mult),
     atr_trailing_mult:
@@ -85,7 +82,6 @@ export function BacktestForm({ onCreated, presetStrategy, onClearPreset }: Backt
       ema_gap_min_pct: Number(form.ema_gap_min_pct),
       adx_min: Number(form.adx_min),
       adx_require_di: form.adx_require_di,
-      adx_require_rising: form.adx_require_rising,
       atr_period: Number(form.atr_period),
       atr_stop_mult: form.atr_stop_mult ? Number(form.atr_stop_mult) : null,
       atr_trailing_mult: form.atr_trailing_mult
@@ -293,16 +289,6 @@ export function BacktestForm({ onCreated, presetStrategy, onClearPreset }: Backt
             Require +DI {'>'} -DI
           </label>
 
-          <label className="checkbox-label">
-            <input
-              type="checkbox"
-              checked={form.adx_require_rising}
-              onChange={(event) =>
-                setForm({ ...form, adx_require_rising: event.target.checked })
-              }
-            />
-            Require ADX rising
-          </label>
         </div>
       </details>
 
