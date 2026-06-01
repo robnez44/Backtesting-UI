@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Crypto Analysis API",
-    "description": "API para backtesting de estrategias de criptomonedas",
+    "description": "API para backtesting de estrategias de activos",
     "version": "1.0.0"
   },
   "paths": {
@@ -30,8 +30,7 @@
                     "exit_slope_periods": 2,
                     "ema_gap_min_pct": 0.0,
                     "adx_min": 23,
-                    "adx_require_di": true,
-                    "adx_require_rising": false
+                    "adx_require_di": true
                   }
                 },
                 "largo": {
@@ -48,7 +47,6 @@
                     "ema_gap_min_pct": 0.0,
                     "adx_min": 23,
                     "adx_require_di": true,
-                    "adx_require_rising": false,
                     "atr_period": 14,
                     "atr_stop_mult": 1.8,
                     "atr_trailing_mult": 2.2
@@ -226,6 +224,160 @@
         }
       }
     },
+    "/api/strategies": {
+      "post": {
+        "tags": ["Strategies"],
+        "summary": "Save Strategy",
+        "operationId": "save_strategy_api_strategies_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SaveStrategyRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Save Strategy Api Strategies Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Strategies"],
+        "summary": "List Saved Strategies",
+        "operationId": "list_saved_strategies_api_strategies_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "title": "Interval"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 50, "title": "Limit" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StrategyRecordResponse"
+                  },
+                  "title": "Response List Saved Strategies Api Strategies Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/strategies/{strategy_id}": {
+      "get": {
+        "tags": ["Strategies"],
+        "summary": "Get Saved Strategy",
+        "operationId": "get_saved_strategy_api_strategies__strategy_id__get",
+        "parameters": [
+          {
+            "name": "strategy_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Strategy Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyRecordResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Strategies"],
+        "summary": "Delete Saved Strategy",
+        "operationId": "delete_saved_strategy_api_strategies__strategy_id__delete",
+        "parameters": [
+          {
+            "name": "strategy_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Strategy Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
     "/": {
       "get": {
         "tags": ["Health"],
@@ -337,10 +489,6 @@
           "ema_gap_min_pct": { "type": "number", "title": "Ema Gap Min Pct" },
           "adx_min": { "type": "number", "title": "Adx Min" },
           "adx_require_di": { "type": "boolean", "title": "Adx Require Di" },
-          "adx_require_rising": {
-            "type": "boolean",
-            "title": "Adx Require Rising"
-          },
           "atr_period": { "type": "integer", "title": "Atr Period" },
           "atr_stop_mult": {
             "anyOf": [{ "type": "number" }, { "type": "null" }],
@@ -367,7 +515,6 @@
           "ema_gap_min_pct",
           "adx_min",
           "adx_require_di",
-          "adx_require_rising",
           "atr_period",
           "atr_stop_mult",
           "atr_trailing_mult",
@@ -462,12 +609,6 @@
             "title": "Adx Require Di",
             "description": "Exigir +DI > -DI en la entrada",
             "default": true
-          },
-          "adx_require_rising": {
-            "type": "boolean",
-            "title": "Adx Require Rising",
-            "description": "Exigir que el ADX sea no decreciente en la entrada",
-            "default": false
           },
           "atr_period": {
             "type": "integer",
@@ -794,6 +935,34 @@
         ],
         "title": "SRLevelResponse"
       },
+      "SaveStrategyRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name",
+            "description": "Nombre para la estrategia guardada"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description",
+            "description": "Descripción opcional"
+          },
+          "symbol": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Symbol",
+            "description": "Símbolo al que apliuca, ej: EURUSDT"
+          },
+          "interval": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Interval",
+            "description": "Intervalo asociado, ej: 4h"
+          },
+          "config": { "$ref": "#/components/schemas/BacktestConfigResponse" }
+        },
+        "type": "object",
+        "required": ["config"],
+        "title": "SaveStrategyRequest"
+      },
       "SegmentMetricsResponse": {
         "properties": {
           "symbol": { "type": "string", "title": "Symbol" },
@@ -936,6 +1105,38 @@
           "total_candles"
         ],
         "title": "SeriesDataResponse"
+      },
+      "StrategyRecordResponse": {
+        "properties": {
+          "id": { "type": "string", "title": "Id" },
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description"
+          },
+          "symbol": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Symbol"
+          },
+          "interval": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Interval"
+          },
+          "config": { "$ref": "#/components/schemas/BacktestConfigResponse" },
+          "created_at": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": ["id", "config"],
+        "title": "StrategyRecordResponse"
       },
       "TradeMarkerResponse": {
         "properties": {

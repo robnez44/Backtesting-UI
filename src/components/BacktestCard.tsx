@@ -22,7 +22,6 @@ export function BacktestCard({ backtest }: BacktestCardProps) {
   const activeFilters = [
     config?.adx_min && config.adx_min > 0 ? 'ADX' : null,
     config?.adx_require_di ? '+DI > -DI' : null,
-    config?.adx_require_rising ? 'ADX rising' : null,
     config?.ema_gap_min_pct && config.ema_gap_min_pct > 0 ? 'EMA gap min' : null,
   ].filter(Boolean) as string[]
 
@@ -93,7 +92,6 @@ export function BacktestCard({ backtest }: BacktestCardProps) {
             <span>EMA gap min %: {config.ema_gap_min_pct}</span>
             <span>ADX min: {config.adx_min}</span>
             <span>Require +DI {'>'} -DI: {boolText(config.adx_require_di)}</span>
-            <span>Require ADX rising: {boolText(config.adx_require_rising)}</span>
             <span>ATR period: {config.atr_period}</span>
             <span>ATR stop mult: {config.atr_stop_mult ?? 'off'}</span>
             <span>ATR trailing mult: {config.atr_trailing_mult ?? 'off'}</span>
