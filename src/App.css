@@ -235,11 +235,6 @@ summary {
   top: 14px;
 }
 
-.strategies-panel {
-  position: sticky;
-  top: 14px;
-}
-
 .strategies-filters {
   margin-bottom: 10px;
 }
@@ -515,11 +510,6 @@ summary {
   box-shadow: 0 0 0 1px var(--accent-border) inset;
 }
 
-.alerts-panel {
-  position: sticky;
-  top: 14px;
-}
-
 .chat-list {
   max-height: 76vh;
   overflow: auto;
@@ -675,8 +665,7 @@ th {
     grid-template-columns: 1fr;
   }
 
-  .navigator-panel,
-  .alerts-panel {
+  .navigator-panel {
     position: static;
   }
 }

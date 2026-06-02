@@ -40,6 +40,7 @@ export function RunBacktestPage() {
 
   return (
     <div className="view-grid">
+      {/* Columna izquierda — stack normal con scroll de página */}
       <div className="stack">
         <BacktestForm
           key={selectedStrategy?.id ?? 'default'}
@@ -48,6 +49,20 @@ export function RunBacktestPage() {
           onClearPreset={handleClearPreset}
         />
         {result ? <BacktestCard backtest={result} /> : null}
+        {result ? <TradesTable trades={result.trades} /> : null}
+        {result ? <BacktestChart backtest={result} /> : null}
+        {result?.signals_timeline?.length ? (
+          <SignalsDebugTable rows={result.signals_timeline} />
+        ) : null}
+      </div>
+
+      {/* Columna derecha — contenedor sticky con scroll propio */}
+      <div className="stack">
+        <StrategiesPanel
+          onApplyStrategy={handleApplyStrategy}
+          reloadToken={strategiesReloadToken}
+        />
+        <AlertsChat alerts={result?.alerts_feed ?? []} />
         {result && savePromptVisible ? (
           <SaveStrategyPrompt
             key={result.id}
@@ -56,19 +71,6 @@ export function RunBacktestPage() {
             onDismiss={handleStrategyDismissed}
           />
         ) : null}
-        {result ? <TradesTable trades={result.trades} /> : null}
-        {result ? <BacktestChart backtest={result} /> : null}
-        {result?.signals_timeline?.length ? (
-          <SignalsDebugTable rows={result.signals_timeline} />
-        ) : null}
-      </div>
-
-      <div className="stack">
-        <StrategiesPanel
-          onApplyStrategy={handleApplyStrategy}
-          reloadToken={strategiesReloadToken}
-        />
-        <AlertsChat alerts={result?.alerts_feed ?? []} />
       </div>
     </div>
   )
