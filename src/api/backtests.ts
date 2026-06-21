@@ -1,0 +1,32 @@
+import axios, { type AxiosInstance, type CreateAxiosDefaults } from 'axios';
+import type { BacktestRequest, BacktestResponse } from '../types/backtesting';
+import type { SeriesDataResponse } from '../types/series';
+import { API_BASE } from '../config/api'
+
+const config: CreateAxiosDefaults = {
+  baseURL: API_BASE,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+}
+
+const api: AxiosInstance = axios.create(config)
+
+export const runBacktest = (req: BacktestRequest): Promise<BacktestResponse> =>
+  api.post<BacktestResponse>('/api/backtests/run', req).then(r => r.data)
+
+export const listBacktests = (params?: {
+  symbol?: string
+  interval?: string
+  limit?: number
+}): Promise<BacktestResponse[]> =>
+  api.get<BacktestResponse[]>('/api/backtests', { params }).then(r => r.data)
+
+export const getBacktest = (id: string): Promise<BacktestResponse> =>
+  api.get<BacktestResponse>(`/api/backtests/${id}`).then(r => r.data)
+
+export const getBacktestSeries = (id: string): Promise<SeriesDataResponse> =>
+  api.get<SeriesDataResponse>(`/api/backtests/${id}/series`).then(r => r.data)
+
+export default api;

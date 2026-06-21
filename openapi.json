@@ -1,0 +1,1250 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Crypto Analysis API",
+    "description": "API para backtesting de estrategias de activos",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/backtests/run": {
+      "post": {
+        "tags": ["Backtests"],
+        "summary": "Correr un nuevo backtest",
+        "description": "Recibe los parámetros, corre el backtest sobre los candles guardados en MongoDB y devuelve el resultado completo con todos los trades. Requiere que existan candles para el rango solicitado; la serie se arma solo con ese rango exacto y sus snapshots asociados.",
+        "operationId": "run_backtest_api_backtests_run_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/BacktestRequest" },
+              "examples": {
+                "corto": {
+                  "summary": "Ejemplo corto",
+                  "description": "Usa solo los parámetros mínimos obligatorios y algunos ajustes comunes.",
+                  "value": {
+                    "symbol": "BTCUSDT",
+                    "interval": "4h",
+                    "start_time": "2026-03-01",
+                    "initial_capital": 100000,
+                    "leverage": 1,
+                    "min_slope_pct": 0.11,
+                    "exit_slope_periods": 2,
+                    "ema_gap_min_pct": 0.0,
+                    "adx_min": 23,
+                    "adx_require_di": true
+                  }
+                },
+                "largo": {
+                  "summary": "Ejemplo largo",
+                  "description": "Incluye todos los campos del request para mostrar el payload completo.",
+                  "value": {
+                    "symbol": "BTCUSDT",
+                    "interval": "4h",
+                    "start_time": "2026-03-01",
+                    "initial_capital": 100000,
+                    "leverage": 1,
+                    "min_slope_pct": 0.11,
+                    "exit_slope_periods": 2,
+                    "ema_gap_min_pct": 0.0,
+                    "adx_min": 23,
+                    "adx_require_di": true,
+                    "atr_period": 14,
+                    "atr_stop_mult": 1.8,
+                    "atr_trailing_mult": 2.2
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BacktestResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/backtests": {
+      "get": {
+        "tags": ["Backtests"],
+        "summary": "Listar todos los backtests",
+        "description": "Devuelve todos los backtests guardados con sus trades completos.",
+        "operationId": "list_backtests_endpoint_api_backtests_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "description": "Símbolo (opcional), ej: BTCUSDT",
+              "title": "Symbol"
+            },
+            "description": "Símbolo (opcional), ej: BTCUSDT"
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "description": "Intervalo (opcional), ej: 4h",
+              "title": "Interval"
+            },
+            "description": "Intervalo (opcional), ej: 4h"
+          },
+          {
+            "name": "strategy_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "description": "Filtrar por nombre de estrategia (opcional)",
+              "title": "Strategy Name"
+            },
+            "description": "Filtrar por nombre de estrategia (opcional)"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "description": "Máximo de resultados",
+              "default": 20,
+              "title": "Limit"
+            },
+            "description": "Máximo de resultados"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": { "$ref": "#/components/schemas/BacktestResponse" },
+                  "title": "Response List Backtests Endpoint Api Backtests Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/backtests/{backtest_id}": {
+      "get": {
+        "tags": ["Backtests"],
+        "summary": "Obtener un backtest por ID",
+        "description": "Devuelve el resultado completo de un backtest específico por su ID de MongoDB, incluyendo todos los trades individuales y la configuración usada.",
+        "operationId": "get_backtest_api_backtests__backtest_id__get",
+        "parameters": [
+          {
+            "name": "backtest_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Backtest Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BacktestResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/backtests/{backtest_id}/series": {
+      "get": {
+        "tags": ["Series"],
+        "summary": "Obtener series (OHLC + indicadores) para un backtest",
+        "description": "Obtiene la serie de tiempo (OHLC + indicadores) para un backtest dado.",
+        "operationId": "get_series_for_backtest_endpoint_api_backtests__backtest_id__series_get",
+        "parameters": [
+          {
+            "name": "backtest_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Backtest Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/SeriesDataResponse" }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/strategies": {
+      "post": {
+        "tags": ["Strategies"],
+        "summary": "Save Strategy",
+        "operationId": "save_strategy_api_strategies_post",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SaveStrategyRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Save Strategy Api Strategies Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": ["Strategies"],
+        "summary": "List Saved Strategies",
+        "operationId": "list_saved_strategies_api_strategies_get",
+        "parameters": [
+          {
+            "name": "symbol",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "title": "Symbol"
+            }
+          },
+          {
+            "name": "interval",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [{ "type": "string" }, { "type": "null" }],
+              "title": "Interval"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "integer", "default": 50, "title": "Limit" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StrategyRecordResponse"
+                  },
+                  "title": "Response List Saved Strategies Api Strategies Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/strategies/{strategy_id}": {
+      "get": {
+        "tags": ["Strategies"],
+        "summary": "Get Saved Strategy",
+        "operationId": "get_saved_strategy_api_strategies__strategy_id__get",
+        "parameters": [
+          {
+            "name": "strategy_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Strategy Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StrategyRecordResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": ["Strategies"],
+        "summary": "Delete Saved Strategy",
+        "operationId": "delete_saved_strategy_api_strategies__strategy_id__delete",
+        "parameters": [
+          {
+            "name": "strategy_id",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string", "title": "Strategy Id" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": { "application/json": { "schema": {} } }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HTTPValidationError" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "tags": ["Health"],
+        "summary": "Health",
+        "operationId": "health__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": { "type": "string" },
+                  "type": "object",
+                  "title": "Response Health  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ADXSnapshotResponse": {
+        "properties": {
+          "symbol": { "type": "string", "title": "Symbol" },
+          "interval": { "type": "string", "title": "Interval" },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "plus_di": { "type": "number", "title": "Plus Di" },
+          "minus_di": { "type": "number", "title": "Minus Di" },
+          "dx": { "type": "number", "title": "Dx" },
+          "adx": { "type": "number", "title": "Adx" }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "interval",
+          "timestamp",
+          "plus_di",
+          "minus_di",
+          "dx",
+          "adx"
+        ],
+        "title": "ADXSnapshotResponse"
+      },
+      "BacktestAlertResponse": {
+        "properties": {
+          "index": { "type": "integer", "title": "Index" },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "event_type": { "type": "string", "title": "Event Type" },
+          "action": { "type": "string", "title": "Action" },
+          "message": { "type": "string", "title": "Message" },
+          "price": { "type": "number", "title": "Price" },
+          "trade_number": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Trade Number"
+          },
+          "exit_reason": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Exit Reason"
+          },
+          "exit_reason_label": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Exit Reason Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "index",
+          "timestamp",
+          "event_type",
+          "action",
+          "message",
+          "price"
+        ],
+        "title": "BacktestAlertResponse",
+        "description": "Evento de alerta estilo bot (senal o ejecucion)."
+      },
+      "BacktestConfigResponse": {
+        "properties": {
+          "initial_capital": { "type": "number", "title": "Initial Capital" },
+          "leverage": { "type": "number", "title": "Leverage" },
+          "stop_loss_pct": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Stop Loss Pct"
+          },
+          "take_profit_pct": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Take Profit Pct"
+          },
+          "breakeven_trigger_pct": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Breakeven Trigger Pct"
+          },
+          "min_slope_pct": { "type": "number", "title": "Min Slope Pct" },
+          "exit_slope_periods": {
+            "type": "integer",
+            "title": "Exit Slope Periods"
+          },
+          "ema_gap_min_pct": { "type": "number", "title": "Ema Gap Min Pct" },
+          "adx_min": { "type": "number", "title": "Adx Min" },
+          "adx_require_di": { "type": "boolean", "title": "Adx Require Di" },
+          "atr_period": { "type": "integer", "title": "Atr Period" },
+          "atr_stop_mult": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Atr Stop Mult"
+          },
+          "atr_trailing_mult": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Atr Trailing Mult"
+          },
+          "atr_stop_confirm_on_close": {
+            "type": "boolean",
+            "title": "Atr Stop Confirm On Close"
+          }
+        },
+        "type": "object",
+        "required": [
+          "initial_capital",
+          "leverage",
+          "stop_loss_pct",
+          "take_profit_pct",
+          "breakeven_trigger_pct",
+          "min_slope_pct",
+          "exit_slope_periods",
+          "ema_gap_min_pct",
+          "adx_min",
+          "adx_require_di",
+          "atr_period",
+          "atr_stop_mult",
+          "atr_trailing_mult",
+          "atr_stop_confirm_on_close"
+        ],
+        "title": "BacktestConfigResponse",
+        "description": "Espejo de backtesting.records.BacktestConfig"
+      },
+      "BacktestRequest": {
+        "properties": {
+          "symbol": {
+            "type": "string",
+            "title": "Symbol",
+            "description": "Par de trading, ej: BTCUSDT",
+            "default": "BTCUSDT"
+          },
+          "interval": {
+            "type": "string",
+            "title": "Interval",
+            "description": "Temporalidad: 1h, 4h, 1d, etc.",
+            "default": "4h"
+          },
+          "start_time": {
+            "type": "string",
+            "title": "Start Time",
+            "description": "Fecha inicio UTC — YYYY-MM-DD o YYYY-MM-DD HH:MM"
+          },
+          "end_time": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "End Time",
+            "description": "Fecha fin UTC (opcional, None = hasta el último candle disponible)"
+          },
+          "initial_capital": {
+            "type": "number",
+            "exclusiveMinimum": 0.0,
+            "title": "Initial Capital",
+            "description": "Capital inicial en USDT",
+            "default": 10000.0
+          },
+          "leverage": {
+            "type": "number",
+            "minimum": 1.0,
+            "title": "Leverage",
+            "description": "Apalancamiento (1 = sin apalancamiento)",
+            "default": 1.0
+          },
+          "stop_loss_pct": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Stop Loss Pct",
+            "description": "Stop Loss en % (ej: 2 = 2%). None = desactivado"
+          },
+          "take_profit_pct": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Take Profit Pct",
+            "description": "Take Profit en % (ej: 5 = 5%). None = desactivado"
+          },
+          "breakeven_trigger_pct": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Breakeven Trigger Pct",
+            "description": "Breakeven trigger en %. None = desactivado"
+          },
+          "min_slope_pct": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Min Slope Pct",
+            "description": "Pendiente mínima EMA 10 en % para validar cruce",
+            "default": 0.08
+          },
+          "exit_slope_periods": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Exit Slope Periods",
+            "description": "Velas consecutivas con pendiente negativa para confirmar salida",
+            "default": 2
+          },
+          "ema_gap_min_pct": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Ema Gap Min Pct",
+            "description": "Gap mínimo EMA10-EMA55 en % (0 = desactivado)",
+            "default": 0.0
+          },
+          "adx_min": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Adx Min",
+            "description": "ADX mínimo para confirmar tendencia (0 = desactivado)",
+            "default": 0.0
+          },
+          "adx_require_di": {
+            "type": "boolean",
+            "title": "Adx Require Di",
+            "description": "Exigir +DI > -DI en la entrada",
+            "default": true
+          },
+          "atr_period": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Atr Period",
+            "description": "Periodo del ATR",
+            "default": 14
+          },
+          "atr_stop_mult": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Atr Stop Mult",
+            "description": "Multiplicador ATR para stop inicial (None = desactivado)",
+            "default": 1.8
+          },
+          "atr_trailing_mult": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Atr Trailing Mult",
+            "description": "Multiplicador ATR para trailing stop (None = desactivado)",
+            "default": 2.2
+          }
+        },
+        "type": "object",
+        "required": ["start_time"],
+        "title": "BacktestRequest"
+      },
+      "BacktestResponse": {
+        "properties": {
+          "id": { "type": "string", "title": "Id" },
+          "symbol": { "type": "string", "title": "Symbol" },
+          "interval": { "type": "string", "title": "Interval" },
+          "strategy_name": { "type": "string", "title": "Strategy Name" },
+          "start_time": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "Start Time"
+          },
+          "end_time": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "End Time"
+          },
+          "created_at": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "Created At"
+          },
+          "initial_capital": { "type": "number", "title": "Initial Capital" },
+          "final_capital": { "type": "number", "title": "Final Capital" },
+          "total_return_pct": { "type": "number", "title": "Total Return Pct" },
+          "max_drawdown_pct": { "type": "number", "title": "Max Drawdown Pct" },
+          "total_trades": { "type": "integer", "title": "Total Trades" },
+          "winning_trades": { "type": "integer", "title": "Winning Trades" },
+          "losing_trades": { "type": "integer", "title": "Losing Trades" },
+          "win_rate_pct": { "type": "number", "title": "Win Rate Pct" },
+          "profit_factor": { "type": "number", "title": "Profit Factor" },
+          "avg_trade_return_pct": {
+            "type": "number",
+            "title": "Avg Trade Return Pct"
+          },
+          "loaded_candles_count": {
+            "type": "integer",
+            "minimum": 0.0,
+            "title": "Loaded Candles Count",
+            "default": 0
+          },
+          "trades": {
+            "items": { "$ref": "#/components/schemas/TradeResponse" },
+            "type": "array",
+            "title": "Trades"
+          },
+          "trade_markers": {
+            "items": { "$ref": "#/components/schemas/TradeMarkerResponse" },
+            "type": "array",
+            "title": "Trade Markers"
+          },
+          "config": {
+            "anyOf": [
+              { "$ref": "#/components/schemas/BacktestConfigResponse" },
+              { "type": "null" }
+            ]
+          },
+          "alerts_feed": {
+            "items": { "$ref": "#/components/schemas/BacktestAlertResponse" },
+            "type": "array",
+            "title": "Alerts Feed"
+          },
+          "signals_timeline": {
+            "items": {
+              "$ref": "#/components/schemas/BacktestSignalTimelineRowResponse"
+            },
+            "type": "array",
+            "title": "Signals Timeline"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "symbol",
+          "interval",
+          "strategy_name",
+          "start_time",
+          "end_time",
+          "created_at",
+          "initial_capital",
+          "final_capital",
+          "total_return_pct",
+          "max_drawdown_pct",
+          "total_trades",
+          "winning_trades",
+          "losing_trades",
+          "win_rate_pct",
+          "profit_factor",
+          "avg_trade_return_pct",
+          "trades",
+          "config"
+        ],
+        "title": "BacktestResponse",
+        "description": "Respuesta completa de un backtest.\nEspejo de backtesting.records.BacktestResult + id de MongoDB.\nIncluye todos los trades y la configuración usada."
+      },
+      "BacktestSignalTimelineRowResponse": {
+        "properties": {
+          "index": { "type": "integer", "title": "Index" },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "close_price": { "type": "number", "title": "Close Price" },
+          "ema10": { "type": "number", "title": "Ema10" },
+          "ema55": { "type": "number", "title": "Ema55" },
+          "gap_pct": { "type": "number", "title": "Gap Pct" },
+          "slope_pct": { "type": "number", "title": "Slope Pct" },
+          "cond_ema10_gt_ema55": {
+            "type": "boolean",
+            "title": "Cond Ema10 Gt Ema55"
+          },
+          "cond_gap_ge_min": { "type": "boolean", "title": "Cond Gap Ge Min" },
+          "cond_slope_ge_min": {
+            "type": "boolean",
+            "title": "Cond Slope Ge Min"
+          },
+          "cond_price_gt_ema10": {
+            "type": "boolean",
+            "title": "Cond Price Gt Ema10"
+          },
+          "adx": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Adx"
+          },
+          "plus_di": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Plus Di"
+          },
+          "minus_di": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Minus Di"
+          },
+          "event": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Event"
+          }
+        },
+        "type": "object",
+        "required": [
+          "index",
+          "timestamp",
+          "close_price",
+          "ema10",
+          "ema55",
+          "gap_pct",
+          "slope_pct",
+          "cond_ema10_gt_ema55",
+          "cond_gap_ge_min",
+          "cond_slope_ge_min",
+          "cond_price_gt_ema10"
+        ],
+        "title": "BacktestSignalTimelineRowResponse",
+        "description": "Fila de timeline de velas relevantes para tabla de debug."
+      },
+      "CandleResponse": {
+        "properties": {
+          "symbol": { "type": "string", "title": "Symbol" },
+          "interval": { "type": "string", "title": "Interval" },
+          "open_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Open Time"
+          },
+          "open_price": { "type": "number", "title": "Open Price" },
+          "high_price": { "type": "number", "title": "High Price" },
+          "low_price": { "type": "number", "title": "Low Price" },
+          "close_price": { "type": "number", "title": "Close Price" },
+          "volume": { "type": "number", "title": "Volume" },
+          "close_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Close Time"
+          },
+          "quote_asset_volume": {
+            "type": "number",
+            "title": "Quote Asset Volume"
+          },
+          "number_of_trades": {
+            "type": "integer",
+            "title": "Number Of Trades"
+          },
+          "taker_buy_base_asset_volume": {
+            "type": "number",
+            "title": "Taker Buy Base Asset Volume"
+          },
+          "taker_buy_quote_asset_volume": {
+            "type": "number",
+            "title": "Taker Buy Quote Asset Volume"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "interval",
+          "open_time",
+          "open_price",
+          "high_price",
+          "low_price",
+          "close_price",
+          "volume",
+          "close_time",
+          "quote_asset_volume",
+          "number_of_trades",
+          "taker_buy_base_asset_volume",
+          "taker_buy_quote_asset_volume"
+        ],
+        "title": "CandleResponse"
+      },
+      "EMASnapshotResponse": {
+        "properties": {
+          "symbol": { "type": "string", "title": "Symbol" },
+          "interval": { "type": "string", "title": "Interval" },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "span": { "type": "integer", "title": "Span" },
+          "price": { "type": "number", "title": "Price" },
+          "ema_value": { "type": "number", "title": "Ema Value" },
+          "abs_slope": { "type": "number", "title": "Abs Slope" },
+          "pct_slope": { "type": "number", "title": "Pct Slope" },
+          "distance": { "type": "number", "title": "Distance" },
+          "distance_pct": { "type": "number", "title": "Distance Pct" }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "interval",
+          "timestamp",
+          "span",
+          "price",
+          "ema_value",
+          "abs_slope",
+          "pct_slope",
+          "distance",
+          "distance_pct"
+        ],
+        "title": "EMASnapshotResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": { "$ref": "#/components/schemas/ValidationError" },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "SMISnapshotResponse": {
+        "properties": {
+          "symbol": { "type": "string", "title": "Symbol" },
+          "interval": { "type": "string", "title": "Interval" },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "smi": { "type": "number", "title": "Smi" }
+        },
+        "type": "object",
+        "required": ["symbol", "interval", "timestamp", "smi"],
+        "title": "SMISnapshotResponse"
+      },
+      "SRLevelResponse": {
+        "properties": {
+          "symbol": { "type": "string", "title": "Symbol" },
+          "interval": { "type": "string", "title": "Interval" },
+          "idx": { "type": "integer", "title": "Idx" },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Timestamp"
+          },
+          "price": { "type": "number", "title": "Price" },
+          "level_type": { "type": "string", "title": "Level Type" },
+          "touches": {
+            "anyOf": [{ "type": "integer" }, { "type": "null" }],
+            "title": "Touches",
+            "default": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "interval",
+          "idx",
+          "timestamp",
+          "price",
+          "level_type"
+        ],
+        "title": "SRLevelResponse"
+      },
+      "SaveStrategyRequest": {
+        "properties": {
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name",
+            "description": "Nombre para la estrategia guardada"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description",
+            "description": "Descripción opcional"
+          },
+          "symbol": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Symbol",
+            "description": "Símbolo al que apliuca, ej: EURUSDT"
+          },
+          "interval": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Interval",
+            "description": "Intervalo asociado, ej: 4h"
+          },
+          "config": { "$ref": "#/components/schemas/BacktestConfigResponse" }
+        },
+        "type": "object",
+        "required": ["config"],
+        "title": "SaveStrategyRequest"
+      },
+      "SegmentMetricsResponse": {
+        "properties": {
+          "symbol": { "type": "string", "title": "Symbol" },
+          "interval": { "type": "string", "title": "Interval" },
+          "start_idx": { "type": "integer", "title": "Start Idx" },
+          "end_idx": { "type": "integer", "title": "End Idx" },
+          "length": { "type": "integer", "title": "Length" },
+          "a": { "type": "number", "title": "A" },
+          "b": { "type": "number", "title": "B" },
+          "r2": { "type": "number", "title": "R2" },
+          "pct_slope": { "type": "number", "title": "Pct Slope" },
+          "mean_price": { "type": "number", "title": "Mean Price" },
+          "regime": { "type": "string", "title": "Regime" },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time"
+          },
+          "start_price": { "type": "number", "title": "Start Price" },
+          "end_price": { "type": "number", "title": "End Price" }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "interval",
+          "start_idx",
+          "end_idx",
+          "length",
+          "a",
+          "b",
+          "r2",
+          "pct_slope",
+          "mean_price",
+          "regime",
+          "start_time",
+          "end_time",
+          "start_price",
+          "end_price"
+        ],
+        "title": "SegmentMetricsResponse"
+      },
+      "SeriesDataResponse": {
+        "properties": {
+          "symbol": { "type": "string", "title": "Symbol" },
+          "interval": { "type": "string", "title": "Interval" },
+          "start_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Start Time"
+          },
+          "end_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "End Time"
+          },
+          "start_price": { "type": "number", "title": "Start Price" },
+          "end_price": { "type": "number", "title": "End Price" },
+          "total_candles": { "type": "integer", "title": "Total Candles" },
+          "trends": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/SegmentMetricsResponse"
+                },
+                "type": "array"
+              },
+              { "type": "null" }
+            ],
+            "title": "Trends"
+          },
+          "candles": {
+            "anyOf": [
+              {
+                "items": { "$ref": "#/components/schemas/CandleResponse" },
+                "type": "array"
+              },
+              { "type": "null" }
+            ],
+            "title": "Candles"
+          },
+          "ema_points": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "items": {
+                    "$ref": "#/components/schemas/EMASnapshotResponse"
+                  },
+                  "type": "array"
+                },
+                "type": "object"
+              },
+              { "type": "null" }
+            ],
+            "title": "Ema Points"
+          },
+          "adx_points": {
+            "anyOf": [
+              {
+                "items": { "$ref": "#/components/schemas/ADXSnapshotResponse" },
+                "type": "array"
+              },
+              { "type": "null" }
+            ],
+            "title": "Adx Points"
+          },
+          "smi_points": {
+            "anyOf": [
+              {
+                "items": { "$ref": "#/components/schemas/SMISnapshotResponse" },
+                "type": "array"
+              },
+              { "type": "null" }
+            ],
+            "title": "Smi Points"
+          },
+          "sr_levels": {
+            "anyOf": [
+              {
+                "items": { "$ref": "#/components/schemas/SRLevelResponse" },
+                "type": "array"
+              },
+              { "type": "null" }
+            ],
+            "title": "Sr Levels"
+          }
+        },
+        "type": "object",
+        "required": [
+          "symbol",
+          "interval",
+          "start_time",
+          "end_time",
+          "start_price",
+          "end_price",
+          "total_candles"
+        ],
+        "title": "SeriesDataResponse"
+      },
+      "StrategyRecordResponse": {
+        "properties": {
+          "id": { "type": "string", "title": "Id" },
+          "name": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Name"
+          },
+          "description": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Description"
+          },
+          "symbol": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Symbol"
+          },
+          "interval": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Interval"
+          },
+          "config": { "$ref": "#/components/schemas/BacktestConfigResponse" },
+          "created_at": {
+            "anyOf": [
+              { "type": "string", "format": "date-time" },
+              { "type": "null" }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": ["id", "config"],
+        "title": "StrategyRecordResponse"
+      },
+      "TradeMarkerResponse": {
+        "properties": {
+          "trade_number": { "type": "integer", "title": "Trade Number" },
+          "marker_type": { "type": "string", "title": "Marker Type" },
+          "side": { "type": "string", "title": "Side" },
+          "bar_index": { "type": "integer", "title": "Bar Index" },
+          "bar_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Bar Time"
+          },
+          "execution_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Execution Time"
+          },
+          "price": { "type": "number", "title": "Price" },
+          "pnl": {
+            "anyOf": [{ "type": "number" }, { "type": "null" }],
+            "title": "Pnl"
+          },
+          "is_win": {
+            "anyOf": [{ "type": "boolean" }, { "type": "null" }],
+            "title": "Is Win"
+          },
+          "exit_reason": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Exit Reason"
+          },
+          "exit_reason_label": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Exit Reason Label"
+          }
+        },
+        "type": "object",
+        "required": [
+          "trade_number",
+          "marker_type",
+          "side",
+          "bar_index",
+          "bar_time",
+          "execution_time",
+          "price"
+        ],
+        "title": "TradeMarkerResponse"
+      },
+      "TradeResponse": {
+        "properties": {
+          "entry_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Entry Time"
+          },
+          "exit_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Exit Time"
+          },
+          "side": { "type": "string", "title": "Side" },
+          "entry_price": { "type": "number", "title": "Entry Price" },
+          "exit_price": { "type": "number", "title": "Exit Price" },
+          "quantity": { "type": "number", "title": "Quantity" },
+          "pnl": { "type": "number", "title": "Pnl" },
+          "return_pct": { "type": "number", "title": "Return Pct" },
+          "candles_held": { "type": "integer", "title": "Candles Held" },
+          "exit_reason": { "type": "string", "title": "Exit Reason" },
+          "exit_reason_label": {
+            "anyOf": [{ "type": "string" }, { "type": "null" }],
+            "title": "Exit Reason Label"
+          },
+          "equity_before": { "type": "number", "title": "Equity Before" },
+          "equity_after": { "type": "number", "title": "Equity After" }
+        },
+        "type": "object",
+        "required": [
+          "entry_time",
+          "exit_time",
+          "side",
+          "entry_price",
+          "exit_price",
+          "quantity",
+          "pnl",
+          "return_pct",
+          "candles_held",
+          "exit_reason",
+          "equity_before",
+          "equity_after"
+        ],
+        "title": "TradeResponse",
+        "description": "Espejo de backtesting.records.Trade"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": { "anyOf": [{ "type": "string" }, { "type": "integer" }] },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": { "type": "string", "title": "Message" },
+          "type": { "type": "string", "title": "Error Type" },
+          "input": { "title": "Input" },
+          "ctx": { "type": "object", "title": "Context" }
+        },
+        "type": "object",
+        "required": ["loc", "msg", "type"],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
